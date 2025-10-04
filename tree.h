@@ -1,20 +1,15 @@
 #ifndef TREE_H
 #define TREE_H
 
-#include "node.h"
 #include <string>
-#include <fstream>
+#include <ostream>
+#include "node.h"
 
-// Tree building function
-Node* buildTree(const std::vector<std::string>& words);
+// Insert a string into BST keyed by frequency
+Node* buildTree(Node* root, const std::string &word, int freq);
 
-// Tree traversal functions
-void printPreorder(Node* root, std::ofstream& outFile, int depth = 0);
-void printInorder(Node* root, std::ofstream& outFile, int depth = 0);
-void printPostorder(Node* root, std::ofstream& outFile, int depth = 0);
-
-// Helper functions
-Node* insert(Node* root, const std::string& word, int frequency);
-void deleteTree(Node* root);
+void printPreorder(Node* root, std::ostream& out, int depth = 0);
+void printInorder(Node* root, std::ostream& out, int depth = 0);
+void printPostorder(Node* root, std::ostream& out, int depth = 0);
 
 #endif

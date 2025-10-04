@@ -6,12 +6,12 @@ If the file argument is not given, the program reads data from the keyboard.
 If the argument is given, the program reads the data file file.fs25s1. (note that file is any valid name and the extension is implicit - it is NOT allowed on the command line).
 
 Without optional argument:
-P0 // read from the keyboard until simulated EOF
-P0 < somefile // same as above except redirecting from somefile instead of keyboard, this testskeyboard input. 
+1) P0 // read from the keyboard until simulated EOF - Ctrl+D
+2) P0 < P0_test3.fs25s1 // same as above except redirecting from somefile instead of keyboard, this testskeyboard input. 
 somefile must be the entire filename including the otherwise implicit extension, andthis is the same as above except the shell submits the file to the program through the standard input.
 
 With optional argument:
-P0 somename // read from somename.fs25s1
+3) P0 P0_test3.fs25s1
 
 Requirements:
 Assume you do not know the size of the input file.

@@ -1,118 +1,81 @@
-#include "tree.h"
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include <string>
-#include <sstream>
+#include <vector>
+
+#include "tree.h"
+#include "node.h"
 
 using namespace std;
 
-// Function to validate that a string contains only letters and digits
-bool isValidString(const string& str) {
-    if (str.empty()) return false;
-    
-    for (char c : str) {
-        if (!isalnum(c)) {
-            return false;
-        }
-    }
-    return true;
+static void exitError(const string &s) {
+    cout << s << endl;
+    exit(1);
 }
 
-int main(int argc, char* argv[]) {
-    // Check command line arguments
-    if (argc > 2) {
-        cerr << "Error: Too many arguments. Usage: P0 [filename]" << endl;
-        return 1;
-    }
-    
-    vector<string> words;
-    string basename = "out";  // Default basename for output files
-    
-    // Determine input source
-    if (argc == 1) {
-        // Read from stdin
-        string word;
-        while (cin >> word) {
-            if (isValidString(word)) {
-                words.push_back(word);
-            } else {
-                cerr << "Warning: Skipping invalid datum '" << word << "' (contains non-alphanumeric characters)" << endl;
-            }
+// find or add string in vector and increment count
+static void addOrIncrement(vector<pair<string,int>> &data, const string &word) {
+    for (auto &p : data) {
+        if (p.first == word) {
+            p.second++;
+            return;
         }
+    }
+    data.push_back({word, 1});
+}
+
+int invoke(int argc, char *argv[]) {
+    if (argc > 2)
+        exitError("Too many arguments");
+
+    string base = (argc == 2) ? string(argv[1]) : string("out");
+
+    istream *in = &cin;
+    ifstream infile;
+    if (argc == 2) {
+        string filename = base + ".fs25s1";
+        infile.open(filename);
+        if (!infile)
+            exitError("Cannot open file " + filename);
+        cout << "Reading from file: " << filename << endl;
+        in = &infile;
     } else {
-        // Read from file
-        basename = argv[1];
-        string filename = basename + ".fs25s1";
-        
-        ifstream inFile(filename);
-        if (!inFile.is_open()) {
-            cerr << "Error: Cannot open file " << filename << endl;
-            return 1;
-        }
-        
-        string word;
-        while (inFile >> word) {
-            if (isValidString(word)) {
-                words.push_back(word);
-            } else {
-                cerr << "Warning: Skipping invalid datum '" << word << "' (contains non-alphanumeric characters)" << endl;
-            }
-        }
-        inFile.close();
+        cout << "Reading from keyboard (Ctrl+D to end):" << endl;
     }
-    
-    // Check if we have any words
-    if (words.empty()) {
-        cerr << "Error: No input data" << endl;
-        return 1;
+
+    // Step 1: Read input and record each string + frequency in vector
+    vector<pair<string,int>> words; // keeps insertion order
+    string token;
+    while (*in >> token) {
+        addOrIncrement(words, token);
     }
-    
-    // Build the tree
-    Node* root = buildTree(words);
-    
-    // Generate output files
-    string preorderFile = basename + ".preorder";
-    string inorderFile = basename + ".inorder";
-    string postorderFile = basename + ".postorder";
-    
-    // Write preorder traversal
-    ofstream preOut(preorderFile);
-    if (!preOut.is_open()) {
-        cerr << "Error: Cannot create " << preorderFile << endl;
-        deleteTree(root);
-        return 1;
+
+    // Step 2: Build BST using frequency rule
+    Node *root = nullptr;
+    for (auto &p : words) {
+        root = buildTree(root, p.first, p.second);
     }
-    printPreorder(root, preOut);
-    preOut.close();
-    
-    // Write inorder traversal
-    ofstream inOut(inorderFile);
-    if (!inOut.is_open()) {
-        cerr << "Error: Cannot create " << inorderFile << endl;
-        deleteTree(root);
-        return 1;
+
+    // Step 3: Write traversals
+    {
+        ofstream f(base + ".preorder");
+        if (!f) exitError("Cannot open " + base + ".preorder");
+        printPreorder(root, f);
     }
-    printInorder(root, inOut);
-    inOut.close();
-    
-    // Write postorder traversal
-    ofstream postOut(postorderFile);
-    if (!postOut.is_open()) {
-        cerr << "Error: Cannot create " << postorderFile << endl;
-        deleteTree(root);
-        return 1;
+    {
+        ofstream f(base + ".inorder");
+        if (!f) exitError("Cannot open " + base + ".inorder");
+        printInorder(root, f);
     }
-    printPostorder(root, postOut);
-    postOut.close();
-    
-    // Clean up
-    deleteTree(root);
-    
-    cout << "Tree traversals written to:" << endl;
-    cout << "  " << preorderFile << endl;
-    cout << "  " << inorderFile << endl;
-    cout << "  " << postorderFile << endl;
-    
+    {
+        ofstream f(base + ".postorder");
+        if (!f) exitError("Cannot open " + base + ".postorder");
+        printPostorder(root, f);
+    }
+
     return 0;
+}
+
+int main(int argc, char *argv[]) {
+    return invoke(argc, argv);
 }

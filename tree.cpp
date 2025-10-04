@@ -1,127 +1,52 @@
 #include "tree.h"
 #include <iostream>
-#include <map>
-#include <vector>
-#include <string>
+#include <algorithm>
 
 using namespace std;
 
-// Insert a node into the BST based on frequency
-Node* insert(Node* root, const string& word, int frequency) {
-    if (root == nullptr) {
-        return new Node(word, frequency);
-    }
-    
-    if (frequency < root->frequency) {
-        root->left = insert(root->left, word, frequency);
-    } else if (frequency > root->frequency) {
-        root->right = insert(root->right, word, frequency);
-    } else {
-        // Same frequency - add to existing node
-        root->allStrings.push_back(word);
-    }
-    
+Node* buildTree(Node* root, const string &word, int freq) {
+    if (!root)
+        return new Node(freq, word);
+
+    if (freq < root->freq)
+        root->left = buildTree(root->left, word, freq);
+    else if (freq > root->freq)
+        root->right = buildTree(root->right, word, freq);
+    else
+        root->items.push_back(word);  // same frequency -> same node
+
     return root;
 }
 
-// Build tree from vector of words
-Node* buildTree(const vector<string>& words) {
-    // Count frequencies
-    map<string, int> frequencies;
-    for (const string& word : words) {
-        frequencies[word]++;
+// Printing helpers
+static void printNode(Node* n, ostream& out, int depth) {
+    for (int i = 0; i < depth * 2; ++i)
+        out.put(' ');
+    out << n->freq << ": ";
+    for (size_t i = 0; i < n->items.size(); ++i) {
+        out << n->items[i];
+        if (i + 1 < n->items.size()) out << ' ';
     }
-    
-    Node* root = nullptr;
-    
-    // Insert each unique word with its frequency
-    for (const auto& pair : frequencies) {
-        root = insert(root, pair.first, pair.second);
-    }
-    
-    return root;
+    out << '\n';
 }
 
-// Helper function to calculate actual depth of a node
-void printPreorderHelper(Node* root, ofstream& outFile, int depth) {
-    if (root == nullptr) return;
-    
-    // Print current node
-    for (int i = 0; i < depth * 2; i++) {
-        outFile << " ";
-    }
-    outFile << root->frequency << ": ";
-    for (size_t i = 0; i < root->allStrings.size(); i++) {
-        if (i > 0) outFile << " ";
-        outFile << root->allStrings[i];
-    }
-    outFile << endl;
-    
-    // Traverse left then right
-    printPreorderHelper(root->left, outFile, depth + 1);
-    printPreorderHelper(root->right, outFile, depth + 1);
+void printPreorder(Node* root, ostream& out, int depth) {
+    if (!root) return;
+    printNode(root, out, depth);
+    printPreorder(root->left, out, depth + 1);
+    printPreorder(root->right, out, depth + 1);
 }
 
-void printInorderHelper(Node* root, ofstream& outFile, int depth) {
-    if (root == nullptr) return;
-    
-    // Traverse left
-    printInorderHelper(root->left, outFile, depth + 1);
-    
-    // Print current node
-    for (int i = 0; i < depth * 2; i++) {
-        outFile << " ";
-    }
-    outFile << root->frequency << ": ";
-    for (size_t i = 0; i < root->allStrings.size(); i++) {
-        if (i > 0) outFile << " ";
-        outFile << root->allStrings[i];
-    }
-    outFile << endl;
-    
-    // Traverse right
-    printInorderHelper(root->right, outFile, depth + 1);
+void printInorder(Node* root, ostream& out, int depth) {
+    if (!root) return;
+    printInorder(root->left, out, depth + 1);
+    printNode(root, out, depth);
+    printInorder(root->right, out, depth + 1);
 }
 
-void printPostorderHelper(Node* root, ofstream& outFile, int depth) {
-    if (root == nullptr) return;
-    
-    // Traverse left then right
-    printPostorderHelper(root->left, outFile, depth + 1);
-    printPostorderHelper(root->right, outFile, depth + 1);
-    
-    // Print current node
-    for (int i = 0; i < depth * 2; i++) {
-        outFile << " ";
-    }
-    outFile << root->frequency << ": ";
-    for (size_t i = 0; i < root->allStrings.size(); i++) {
-        if (i > 0) outFile << " ";
-        outFile << root->allStrings[i];
-    }
-    outFile << endl;
-}
-
-// Preorder traversal: root, left, right
-void printPreorder(Node* root, ofstream& outFile, int depth) {
-    printPreorderHelper(root, outFile, depth);
-}
-
-// Inorder traversal: left, root, right
-void printInorder(Node* root, ofstream& outFile, int depth) {
-    printInorderHelper(root, outFile, depth);
-}
-
-// Postorder traversal: left, right, root
-void printPostorder(Node* root, ofstream& outFile, int depth) {
-    printPostorderHelper(root, outFile, depth);
-}
-
-// Clean up memory
-void deleteTree(Node* root) {
-    if (root == nullptr) return;
-    
-    deleteTree(root->left);
-    deleteTree(root->right);
-    delete root;
+void printPostorder(Node* root, ostream& out, int depth) {
+    if (!root) return;
+    printPostorder(root->left, out, depth + 1);
+    printPostorder(root->right, out, depth + 1);
+    printNode(root, out, depth);
 }
